@@ -11,6 +11,9 @@
     });
     console.log('[StravaHeatmapExt] Credentials requested.', credentials);
 
+    // Clear pending redirect if present
+    await browser.storage.local.remove('redirect');
+
     if (credentials && Number.isInteger(tabId)) {
       await browser.runtime.sendMessage({
         type: 'redirectComplete',

@@ -2,6 +2,10 @@
 
 ## Versions
 
+### `0.13.6` (2026-02-19)
+
+- Enable missing redirect for strava.com/onboarding
+
 ### `0.13.5` (2025-12-09)
 
 - Replace automatic new-tab opening on install/updates with a clickable notification.

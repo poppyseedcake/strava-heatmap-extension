@@ -36,10 +36,11 @@ export async function openLogin(tabId) {
     autoClose: false,
   });
 
-  // Open Strava login
+  // Set redirect in browser.storage.local before opening the dashboard
+  const redirect = `/maps/global-heatmap?tabId=${tabId}`;
+  await browser.storage.local.set({ redirect });
   await browser.tabs.create({
-    url: `https://www.strava.com/dashboard?redirect=${encodeURIComponent(
-      `/maps/global-heatmap?tabId=${tabId}`
-    )}`,
+    url: 'https://www.strava.com/dashboard',
+    active: true,
   });
 }
