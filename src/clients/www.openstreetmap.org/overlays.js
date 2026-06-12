@@ -8,10 +8,6 @@ const storageKeyLastUsed = 'overlays-last-used';
 export function bindOverlaysShortcuts(context) {
   const keybinding = context.keybinding();
 
-  const projection = iD.geoRawMercator();
-  const dispatch = iD.d3.dispatch('change');
-  const render = iD.svgData(projection, context, dispatch);
-
   keybinding.on(iD.uiCmd('⇧Q'), function (d3_event) {
     d3_event.stopImmediatePropagation();
     d3_event.preventDefault();
@@ -28,98 +24,6 @@ export function bindOverlaysShortcuts(context) {
     }
   });
 
-  keybinding.on(iD.uiCmd('⇧F'), function (d3_event) {
-    d3_event.stopImmediatePropagation();
-    d3_event.preventDefault();
-    render.geojson({});
-    context.flush();
-  });
-
-  keybinding.on(iD.uiCmd('⇧G'), function (d3_event) {
-    d3_event.stopImmediatePropagation();
-    d3_event.preventDefault();
-
-    var changeset = new iD.osmChangeset().update({ id: undefined });
-    var coreHistory = context.history();
-    var changes = coreHistory.changes(iD.actionDiscardTags(coreHistory.difference(), {}));
-    var jxon = changeset.osmChangeJXON(changes);
-
-    var gpx = convertJxonToGpx(jxon);
-
-    if (!gpx) {
-      console.warn('[StravaHeatmapExt] No created or modified ways to export as GPX.');
-      return;
-    }
-
-    // generate blob from gpx data
-    var blob = new Blob([gpx], { type: 'application/gpx+xml' });
-    blob.lastModifiedDate = new Date();
-    blob.name = 'changes.gpx';
-
-    // Highlight changes as GPX file
-    const zoom = context.map().zoom();
-    render.fileList([blob]);
-
-    // Trigger client-side download
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = blob.name;
-    document.body.appendChild(a);
-    a.click();
-
-    // Cleanup
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      context.map().zoom(zoom);
-    }, 100);
-  });
-}
-
-function convertJxonToGpx(jxon) {
-  const fixedTimestamp = new Date().toISOString(); // or hardcoded like "2025-07-21T00:00:00Z"
-
-  const graph = context.history().graph();
-  const { create, modify } = jxon.osmChange;
-  const nodes = (create.node || []).concat(modify.node || []);
-
-  const ways = nodes.reduce((acc, node) => {
-    const id = `n${node['@id']}`;
-    const set = graph._parentWays[id];
-    if (set) {
-      set.forEach((wayId) => {
-        if (!acc.includes(wayId)) acc.push(wayId);
-      });
-    }
-    return acc;
-  }, []);
-
-  if (ways.length === 0) return;
-
-  const trksegs = ways
-    .reduce((acc, wayId) => {
-      const childNodes = graph._childNodes[wayId];
-      if (childNodes) {
-        const trkpts = childNodes
-          .map((node) => {
-            const [lon, lat] = node.loc;
-            return `<trkpt lat="${lat}" lon="${lon}"><time>${fixedTimestamp}</time></trkpt>`;
-          })
-          .join('\n      ');
-        acc.push(`<trkseg>\n      ${trkpts}\n    </trkseg>`);
-      }
-      return acc;
-    }, [])
-    .join('\n    ');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-  <gpx version="1.1" creator="iD-change-export" xmlns="http://www.topografix.com/GPX/1/1">
-    <trk>
-      <name>Created/Modified Ways</name>
-      ${trksegs}
-    </trk>
-  </gpx>`;
 }
 
 export async function setupOverlaysListeners(context) {
