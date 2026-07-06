@@ -1,5 +1,5 @@
 {
-  "name": "strava-heatmap-extension",
+  "name": "strava-heatmap-extension-bikerouter",
   "version": "0.0.0",
   "description": "This browser extension seamlessly integrates the Strava Global Heatmap into popular mapping editors, including the OpenStreetMap iD editor and GPX Studio, enhancing your mapping and route analysis capabilities.",
   "scripts": {
